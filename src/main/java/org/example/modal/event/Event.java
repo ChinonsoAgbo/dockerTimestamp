@@ -1,4 +1,4 @@
-package org.example.modal;
+package org.example.modal.event;
 
 import java.util.Objects;
 
@@ -10,6 +10,7 @@ public class Event {
 
     private String eventType;
 
+    Event(){}
     public Event(String customerId, String workloadId, long timestamp, String eventType) {
         this.customerId = customerId;
         this.workloadId = workloadId;

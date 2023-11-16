@@ -1,8 +1,10 @@
-package org.example.modal;
+package org.example.modal.event;
 
 import java.util.List;
 
 public class EventData {
+    private List<Event> events;
+
     public List<Event> getEvents() {
         return events;
     }
@@ -11,5 +13,8 @@ public class EventData {
         this.events = events;
     }
 
-    private List<Event> events;
+
 }
+
+
+
