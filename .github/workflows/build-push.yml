@@ -16,9 +16,9 @@ env:
 
 on:
   push:
-    branches: [ secondBranch ]
+    branches: [ main ]
   pull_request:
-    branches: [ secondBranch ]
+    branches: [ main ]
 
   workflow_dispatch:
 
