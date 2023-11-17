@@ -18,4 +18,6 @@ public class ResultData {
     public void setResult(List<Result> result) {
         this.result = result;
     }
+
+  
 }

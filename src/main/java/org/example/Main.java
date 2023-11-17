@@ -11,6 +11,11 @@ public class Main {
         SpringApplication.run(Main.class, args);
 
        // new PostService().postServiceResponse();
+
+         new CalculateUserTime().calculateUserUsedTime2();
+
+
+
     }
 
 

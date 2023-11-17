@@ -18,21 +18,27 @@ public class GetService {
         eventSetList = new HashSet<>();
     }
 
-    @GetMapping("/customerevents")
-    public Set<Event> getServiceResponse(){
-        RestTemplate restTemplate = new RestTemplate();
+    @GetMapping("/v1/dataset")
+    public Set<Event> getServiceResponse() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
 
-        ResponseEntity<EventData> response = restTemplate.getForEntity(
-                "http://localhost:9090/v1/dataset",
-                EventData.class);
+            ResponseEntity<EventData> response = restTemplate.getForEntity(
+                    "http://localhost:9090/v1/dataset",
+                    EventData.class);
 
-        EventData eventData = response.getBody();
+            EventData eventData = response.getBody();
 
-        // accessing the events from eventData
-        List<Event> eventList = eventData.getEvents();
-       eventSetList = new HashSet<>(eventList);
+            // accessing the events from eventData
+            List<Event> eventList = eventData.getEvents();
+            eventSetList = new HashSet<>(eventList);
 
-        return eventSetList;
+            return eventSetList;
+        } catch (Exception e) {
+            // Log the exception for debugging purposes
+            e.printStackTrace();
+            throw e; // Rethrow the exception or handle it appropriately
+        }
     }
 
 }

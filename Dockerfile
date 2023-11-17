@@ -1,5 +1,5 @@
 FROM openjdk:17
-EXPOSE 8080
+#EXPOSE 8080
 
 # Specify a working directory
 WORKDIR /app
