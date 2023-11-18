@@ -11,13 +11,6 @@ public class Result{
         this.consumption = consumption;
     }
 
-    @Override
-    public String toString() {
-        return "Result{" +
-                "customerId='" + customerId + '\'' +
-                ", consumption=" + consumption +
-                '}';
-    }
 
     public String getCustomerId() {
         return customerId;

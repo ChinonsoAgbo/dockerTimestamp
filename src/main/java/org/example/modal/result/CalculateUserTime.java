@@ -1,15 +1,9 @@
 package org.example.modal.result;
 
-import org.example.modal.actions.GetService;
+import org.example.modal.actions.Get;
 import org.example.modal.event.Event;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -44,7 +38,8 @@ public class CalculateUserTime {
       Map<String, Long> mapEventStart = new HashMap<>();
       Map<String, Long> mapEventStop = new HashMap<>();
 
-      for (Event event : new GetService().getServiceResponse()) {
+      // get workstamps
+      for (Event event : new Get().getServiceResponse()) {
          String userId = event.getCustomerId();
          String workloadId = event.getWorkloadId();
 
@@ -54,24 +49,36 @@ public class CalculateUserTime {
             mapEventStop.put(workloadId, event.getTimestamp());
          }
       }
+      Map<String, Long> totalWorkload = new HashMap<>();
+      Map<String, String> mapWorkId_mit_UserId = new HashMap<>();
 
       Map<String, Long> saveResultMap = new HashMap<>();
 
-      for (Event event : new GetService().getServiceResponse()) {
+      // calculate workstamp <workloadID, totalWorkstamp >
+      for (Event event : new Get().getServiceResponse()) {
          String workloadId = event.getWorkloadId();
          Long startTime = mapEventStart.get(workloadId);
          Long stopTime = mapEventStop.get(workloadId);
 
          if (startTime != null && stopTime != null) {
             long timeSpent = stopTime - startTime;
-            long currentTimeSpent = timeSpent + mapUserUsedTime.getOrDefault(event.getCustomerId(), 0L);
+            totalWorkload.put(workloadId, totalWorkload.getOrDefault(workloadId, 0L) + timeSpent);
+            mapWorkId_mit_UserId.put(workloadId,event.getCustomerId());
+         }
+      }
+      // save ressults per user
+      for (Map.Entry<String, Long> entry : totalWorkload.entrySet()) {
+         String workloadId = entry.getKey();
+         Long timeSpent = entry.getValue();
+         String userId = mapWorkId_mit_UserId.get(workloadId);
 
-            mapUserUsedTime.put(event.getCustomerId(), currentTimeSpent);
-            saveResultMap.put(event.getCustomerId(), currentTimeSpent);
+         if (userId != null) {
+            saveResultMap.put(userId, saveResultMap.getOrDefault(userId, 0L) + timeSpent);
          }
       }
 
-      List<Result> results = new ArrayList<>();
+      // result list
+         List<Result> results = new ArrayList<>();
 
       for (Map.Entry<String, Long> entry : saveResultMap.entrySet()) {
          results.add(new Result(entry.getKey(), entry.getValue()));
@@ -80,91 +87,59 @@ public class CalculateUserTime {
    }
 
 
-
-
-
-
-
-   @GetMapping("/handle")
-   public HttpEntity<ResultData> calculateUserUsedTime2() {
-      //public List<Result> calculateUserUsedTime() {
-
-      Map<String, Long> mapUserUsedTime = new HashMap<>();
+   @GetMapping("v1/getResult2")
+   public ResultData calculateUserUsedTime22() {
       Map<String, Long> mapEventStart = new HashMap<>();
       Map<String, Long> mapEventStop = new HashMap<>();
 
-      for (Event event : new GetService().getServiceResponse()) {
-
-         String userId = event.getCustomerId();
+      // get workstamps
+      for (Event event : new Get().getServiceResponse()) {
          String workloadId = event.getWorkloadId();
 
-
          if ("start".equals(event.getEventType())) {
-            mapUserUsedTime.put(userId, 0L);
             mapEventStart.put(workloadId, event.getTimestamp());
-
          } else if ("stop".equals(event.getEventType())) {
-            mapUserUsedTime.put(userId, 0L);
             mapEventStop.put(workloadId, event.getTimestamp());
          }
-
-
       }
 
-      Map<String, Long> saveResultMap = new HashMap<>();
+      Map<String, Long> totalWorkload = new HashMap<>();
+      Map<String, String> mapWorkId_mit_UserId = new HashMap<>();
 
-      for (Event event : new GetService().getServiceResponse()) {
+      // calculate workstamp <workloadID, totalWorkstamp >
+      for (Event event : new Get().getServiceResponse()) {
+         String workloadId = event.getWorkloadId();
+         Long startTime = mapEventStart.get(workloadId);
+         Long stopTime = mapEventStop.get(workloadId);
 
-         long startTime = mapEventStart.get(event.getWorkloadId());
-         long stopTime = mapEventStop.get(event.getWorkloadId());
-
-         long timeSpent = stopTime - startTime;
-
-         long currentTimeSpent = timeSpent + mapUserUsedTime.get(event.getCustomerId());
-
-         // update user time
-         mapUserUsedTime.put(event.getCustomerId(), currentTimeSpent);
-
-         // save user time
-         saveResultMap.put(event.getCustomerId(), currentTimeSpent);
-
+         if (startTime != null && stopTime != null) {
+            long timeSpent = stopTime - startTime;
+            totalWorkload.put(workloadId, totalWorkload.getOrDefault(workloadId, 0L) + timeSpent);
+            mapWorkId_mit_UserId.put(workloadId, event.getCustomerId());
+         }
       }
 
-
+      // result list
       List<Result> results = new ArrayList<>();
 
+      // calculate consumption per user
+      Map<String, Long> saveResultMap = new HashMap<>();
+      for (Map.Entry<String, Long> entry : totalWorkload.entrySet()) {
+         String workloadId = entry.getKey();
+         Long timeSpent = entry.getValue();
+         String userId = mapWorkId_mit_UserId.get(workloadId);
 
+         if (userId != null) {
+            saveResultMap.put(userId, saveResultMap.getOrDefault(userId, 0L) + timeSpent);
+         }
+      }
+
+      // convert the result to the desired format
       for (Map.Entry<String, Long> entry : saveResultMap.entrySet()) {
-
          results.add(new Result(entry.getKey(), entry.getValue()));
-
       }
 
-
-      try {
-         // ... (rest of your existing code)
-
-         HttpHeaders headers = new HttpHeaders();
-         headers.setContentType(MediaType.APPLICATION_JSON);
-
-         ResultData resultData = new ResultData(results);
-         HttpEntity<ResultData> requestEntity = new HttpEntity<>(resultData, headers);
-
-         String url = "http://localhost:9090/v1/result";
-         RestTemplate restTemplate = new RestTemplate();
-
-         ResponseEntity<ResultData> responseEntity = restTemplate.postForEntity(url, requestEntity, ResultData.class);
-         ResultData responseBody = responseEntity.getBody();
-
-         System.out.println("Request successful");
-         System.out.println("Response: " + responseBody.toString());
-
-         // Return the ResponseEntity or extract the data as needed
-         return responseEntity;
-      } catch (HttpClientErrorException e) {
-         System.out.println("Request failed with status code: " + e.getRawStatusCode());
-         System.out.println("Response body: " + e.getResponseBodyAsString());
-         throw e; // rethrow the exception if needed
-      }
+      return new ResultData(results);
    }
+
 }
