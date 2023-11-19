@@ -28,66 +28,10 @@ public class CalculateUserTime {
     *
     * @return ResultData object containing a list of Result instances with user IDs and
     * their corresponding total time spent.
-    *
     * Delete this code later
     */
+
    @GetMapping("v1/getResult")
-   public ResultData calculateUserUsedTime() {
-
-      Map<String, Long> mapUserUsedTime = new HashMap<>();
-      Map<String, Long> mapEventStart = new HashMap<>();
-      Map<String, Long> mapEventStop = new HashMap<>();
-
-      // get workstamps
-      for (Event event : new Get().getServiceResponse()) {
-         String userId = event.getCustomerId();
-         String workloadId = event.getWorkloadId();
-
-         if ("start".equals(event.getEventType())) {
-            mapEventStart.put(workloadId, event.getTimestamp());
-         } else if ("stop".equals(event.getEventType())) {
-            mapEventStop.put(workloadId, event.getTimestamp());
-         }
-      }
-      Map<String, Long> totalWorkload = new HashMap<>();
-      Map<String, String> mapWorkId_mit_UserId = new HashMap<>();
-
-      Map<String, Long> saveResultMap = new HashMap<>();
-
-      // calculate workstamp <workloadID, totalWorkstamp >
-      for (Event event : new Get().getServiceResponse()) {
-         String workloadId = event.getWorkloadId();
-         Long startTime = mapEventStart.get(workloadId);
-         Long stopTime = mapEventStop.get(workloadId);
-
-         if (startTime != null && stopTime != null) {
-            long timeSpent = stopTime - startTime;
-            totalWorkload.put(workloadId, totalWorkload.getOrDefault(workloadId, 0L) + timeSpent);
-            mapWorkId_mit_UserId.put(workloadId,event.getCustomerId());
-         }
-      }
-      // save ressults per user
-      for (Map.Entry<String, Long> entry : totalWorkload.entrySet()) {
-         String workloadId = entry.getKey();
-         Long timeSpent = entry.getValue();
-         String userId = mapWorkId_mit_UserId.get(workloadId);
-
-         if (userId != null) {
-            saveResultMap.put(userId, saveResultMap.getOrDefault(userId, 0L) + timeSpent);
-         }
-      }
-
-      // result list
-         List<Result> results = new ArrayList<>();
-
-      for (Map.Entry<String, Long> entry : saveResultMap.entrySet()) {
-         results.add(new Result(entry.getKey(), entry.getValue()));
-      }
-      return new ResultData(results);
-   }
-
-
-   @GetMapping("v1/getResult2")
    public ResultData calculateUserUsedTime22() {
       Map<String, Long> mapEventStart = new HashMap<>();
       Map<String, Long> mapEventStop = new HashMap<>();
